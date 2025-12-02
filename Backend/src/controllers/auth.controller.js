@@ -1,13 +1,18 @@
 import User from "../models/user.model.js";
 import bcrypt from "bcryptjs"
 import { generateTokenAndSetCookie } from "../utils/generateTokenAndSetCookie.js";
+import cloudinary from "../lib/cloudinary.js";
 
 export const signup = async (req, res) => {
     try {
-        const { name, email, password } = req.body;
+        const { fullName, email, password, batch, role, cur_role, company, location } = req.body;
 
-        if (!name || !email || !password) {
-            return res.status(400).send("All fields are required")
+        if (!fullName || !email || !password) {
+            return res.status(400).json({ success: false, message: "Name, email and password are required" })
+        }
+
+        if (password.length < 6) {
+            return res.status(400).json({ success: false, message: "Password must be at least 6 characters" })
         }
 
         const key = String(email).toLowerCase().trim()
@@ -21,9 +26,14 @@ export const signup = async (req, res) => {
         const hashedPassword = await bcrypt.hash(password, 10)
 
         const createUser = await User.create({
-            name: name.trim().charAt(0).toUpperCase() + name.trim().slice(1),
+            fullName: fullName.trim().charAt(0).toUpperCase() + fullName.trim().slice(1),
             email: key,
-            password: hashedPassword
+            password: hashedPassword,
+            batch: batch || undefined,
+            role: role || 'student',
+            cur_role: cur_role || undefined,
+            company: company || undefined,
+            location: location || undefined
         });
 
         // jwt
@@ -79,7 +89,8 @@ export const login = async (req, res) => {
         })
     }
     catch (err) {
-        console.log(err)
+        console.log("Login error:", err)
+        res.status(500).json({ success: false, message: "Internal server error" })
     }
 }
 
@@ -90,9 +101,8 @@ export const logout = (req, res) => {
 
 
 export const checkAuth = async (req, res) => {
-    const id = req.userID
     try {
-        const findUser = await User.findById(id);
+        const findUser = await User.findById(req.user._id);
 
         if (!findUser) {
             return res.status(400).json({ success: false, message: "User not found" });
@@ -101,7 +111,7 @@ export const checkAuth = async (req, res) => {
         res.status(200).json({ success: true, user: userWithoutPassword })
     }
     catch (err) {
-        throw new Error(err.message)
+        res.status(500).json({ success: false, message: err.message })
     }
 }
 export const updateProfile = async (req, res) => {

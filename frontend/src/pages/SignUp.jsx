@@ -1,19 +1,20 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext';
+import { useAuthStore } from '../store/useAuthStore';
 
 export default function Signup() {
   const [formData, setFormData] = useState({
-    name: '',
+    fullName: '',
     email: '',
     password: '',
     batch: '',
     company: '',
     role: '',
+    cur_role: '',
     location: '',
   });
 
-  const { signup } = useAuth();
+  const { signup, isSigningUp } = useAuthStore();
   const navigate = useNavigate();
 
   const handleChange = (e) => {
@@ -23,10 +24,9 @@ export default function Signup() {
     });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    signup(formData);
-    navigate('/profile');
+    await signup(formData);
   };
 
   return (
@@ -40,17 +40,17 @@ export default function Signup() {
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label
-              htmlFor="name"
+              htmlFor="fullName"
               className="block text-sm font-medium text-gray-700 mb-1"
             >
               Full Name
             </label>
             <input
-              id="name"
-              name="name"
+              id="fullName"
+              name="fullName"
               type="text"
               required
-              value={formData.name}
+              value={formData.fullName}
               onChange={handleChange}
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent outline-none transition-all"
               placeholder="John Doe"
@@ -105,7 +105,7 @@ export default function Signup() {
             <input
               id="batch"
               name="batch"
-              type="text"
+              type="number"
               required
               value={formData.batch}
               onChange={handleChange}
@@ -116,39 +116,58 @@ export default function Signup() {
 
           <div>
             <label
-              htmlFor="company"
+              htmlFor="role"
               className="block text-sm font-medium text-gray-700 mb-1"
             >
-              Current Job / Company
+              Role (Student/Alumni)
             </label>
-            <input
-              id="company"
-              name="company"
-              type="text"
+            <select
+              id="role"
+              name="role"
               required
-              value={formData.company}
+              value={formData.role}
               onChange={handleChange}
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent outline-none transition-all"
-              placeholder="Tech Corp"
+            >
+              <option value="">Select role</option>
+              <option value="student">Student</option>
+              <option value="alumni">Alumni</option>
+            </select>
+          </div>
+
+          <div>
+            <label
+              htmlFor="cur_role"
+              className="block text-sm font-medium text-gray-700 mb-1"
+            >
+              Current Job Role
+            </label>
+            <input
+              id="cur_role"
+              name="cur_role"
+              type="text"
+              value={formData.cur_role}
+              onChange={handleChange}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent outline-none transition-all"
+              placeholder="Software Engineer"
             />
           </div>
 
           <div>
             <label
-              htmlFor="role"
+              htmlFor="company"
               className="block text-sm font-medium text-gray-700 mb-1"
             >
-              Role
+              Current Company
             </label>
             <input
-              id="role"
-              name="role"
+              id="company"
+              name="company"
               type="text"
-              required
-              value={formData.role}
+              value={formData.company}
               onChange={handleChange}
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent outline-none transition-all"
-              placeholder="Software Engineer"
+              placeholder="Tech Corp"
             />
           </div>
 
@@ -163,7 +182,6 @@ export default function Signup() {
               id="location"
               name="location"
               type="text"
-              required
               value={formData.location}
               onChange={handleChange}
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent outline-none transition-all"
@@ -173,9 +191,10 @@ export default function Signup() {
 
           <button
             type="submit"
-            className="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors mt-6"
+            disabled={isSigningUp}
+            className="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors mt-6 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Sign Up
+            {isSigningUp ? 'Signing up...' : 'Sign Up'}
           </button>
         </form>
 

@@ -1,12 +1,47 @@
 import { Link, useLocation } from 'react-router-dom';
+import { useEffect } from 'react';
 import { LogOut, GraduationCap } from 'lucide-react';
 import { useAuthStore } from '../store/useAuthStore';
+import { useChatStore } from '../store/useChatStore';
 
 export default function Navbar() {
   const { authUser: user, logout } = useAuthStore();
+  const { unreadCounts, getUnreadCounts, subscribeToMessages, unsubscribeFromMessages } = useChatStore();
+
+  // Calculate total unread messages
+  const totalUnread = Object.values(unreadCounts).reduce((a, b) => a + b, 0);
+
+  // Subscribe to messages globally for notifications
+  // Ideally this should be in a top-level component, but Navbar works too as it's always present.
+  // Although subscribing here might duplicate if also done in Connect.
+  // Better approach: Do it in App.jsx or a layout. But Navbar is fine if we check auth.
+  // Actually, useChatStore logic handles socket events. Let's just use the state here.
+  // We need to fetch counts on mount if user is logged in.
+
+  // useEffect(() => {
+  //   if(user) getUnreadCounts();
+  // }, [user]); 
+  // Wait, component logic inside replace tool is weird. I'll just add the hook usage.
   const location = useLocation();
 
+  // Fetch unread counts when user logs in
+  // Note: we need useEffect from react
+  // I will add import in next step if missing
+  // Actually I can't see imports. I'll assume React imports are present or I'll check first. 
+  // Wait, I should check Navbar imports first. 
+  // Let's just add the hook usage here assuming useEffect is imported or I'll add it.
+  // Navbar.jsx imports: `import { Link, useLocation } from 'react-router-dom';`
+  // It effectively needs `useEffect`.
+
   const isActive = (path) => location.pathname === path;
+
+  useEffect(() => {
+    if (user) {
+      getUnreadCounts();
+      subscribeToMessages();
+    }
+    return () => unsubscribeFromMessages();
+  }, [user, getUnreadCounts, subscribeToMessages, unsubscribeFromMessages]);
 
   return (
     <nav className="sticky top-0 z-50 bg-white shadow-lg">
@@ -57,12 +92,17 @@ export default function Navbar() {
             </Link>
             <Link
               to="/connect"
-              className={`px-3 py-2 rounded-lg transition-all ${isActive('/connect')
+              className={`px-3 py-2 rounded-lg transition-all relative ${isActive('/connect')
                 ? 'bg-blue-50 text-blue-600 font-semibold'
                 : 'text-gray-700 hover:bg-gray-50'
                 }`}
             >
               Connect
+              {totalUnread > 0 && (
+                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold w-5 h-5 flex items-center justify-center rounded-full animate-pulse">
+                  {totalUnread}
+                </span>
+              )}
             </Link>
           </div>
 

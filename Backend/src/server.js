@@ -15,22 +15,24 @@ import userRoute from "./routes/user.js";
 import opportunityRoute from "./routes/opportunity.js";
 import messageRoutes from "./routes/message.route.js";
 import meetingRoutes from "./routes/meeting.route.js";
+import { app, server } from "./lib/socket.js";
 
 // Configure environment variables
 dotenv.config();
-
-// Initialize express app
-const app = express();
 
 // Connect to database
 connectDB();
 
 // Middleware
 app.use(express.json());
+app.use((req, res, next) => {
+  console.log(`Request: ${req.method} ${req.url} from origin ${req.headers.origin}`);
+  next();
+});
 app.use(cookieParser());
 app.use(cors({
-    origin: process.env.CLIENT_URL || "http://localhost:5173",
-    credentials: true
+  origin: ["http://localhost:5173", "http://localhost:5174"],
+  credentials: true
 }))
 
 // Routes
@@ -40,11 +42,11 @@ app.use("/api/events", eventRoute);
 app.use("/api/clubs", clubsRoute);
 app.use("/api/users", userRoute);
 app.use("/api/opportunities", opportunityRoute);
-app.use('/api/messages',messageRoutes);
+app.use('/api/messages', messageRoutes);
 app.use("/api/meeting", meetingRoutes);
 
 // Start server
 const port = process.env.PORT || 3000;
-app.listen(port, () => {
+server.listen(port, () => {
   console.log(`Server is running at port ${port}`);
 });

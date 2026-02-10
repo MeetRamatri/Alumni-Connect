@@ -1,5 +1,5 @@
 import express from "express";
-import User from "../models/user.model.js";
+import User from "../models/User.model.js";
 
 const router = express.Router();
 
@@ -17,7 +17,7 @@ router.post("/", async (req, res) => {
 // Get all users
 router.get("/", async (req, res) => {
     try {
-        const users = await User.find();
+        const users = await User.find().select("-password");
         res.json(users);
     } catch (err) {
         res.status(500).json({ message: err.message });

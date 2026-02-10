@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import { axiosInstance } from '../lib/axios';
 import {
   Search,
   MessageCircle,
@@ -7,128 +8,85 @@ import {
   Building2,
   Briefcase,
   X,
+  Send,
+  Video,
 } from 'lucide-react';
+import { useAuthStore } from '../store/useAuthStore';
+import { useChatStore } from '../store/useChatStore';
+import toast from 'react-hot-toast';
 
 export default function Connect() {
+  const { authUser } = useAuthStore();
+  const {
+    messages,
+    users,
+    selectedUser,
+    isUsersLoading,
+    isMessagesLoading,
+    unreadCounts,
+    getUsers,
+    getMessagesByUserId,
+    sendMessage,
+    subscribeToMessages,
+    unsubscribeFromMessages,
+    setSelectedUser
+  } = useChatStore();
+
   const [searchTerm, setSearchTerm] = useState('');
   const [showChatModal, setShowChatModal] = useState(false);
-  const [showMeetModal, setShowMeetModal] = useState(false);
-  const [selectedAlumni, setSelectedAlumni] = useState(null);
   const [chatMessage, setChatMessage] = useState('');
-  const [meetData, setMeetData] = useState({
-    date: '',
-    time: '',
-    message: '',
-  });
+  const messagesEndRef = useRef(null);
 
-  const allAlumni = [
-    {
-      id: 1,
-      name: 'Sarah Johnson',
-      batch: '2018',
-      company: 'Google',
-      role: 'Senior Software Engineer',
-      location: 'Mountain View, CA',
-      avatar: 'SJ',
-    },
-    {
-      id: 2,
-      name: 'Michael Chen',
-      batch: '2019',
-      company: 'Meta',
-      role: 'Product Manager',
-      location: 'Menlo Park, CA',
-      avatar: 'MC',
-    },
-    {
-      id: 3,
-      name: 'Emily Rodriguez',
-      batch: '2017',
-      company: 'Amazon',
-      role: 'Data Scientist',
-      location: 'Seattle, WA',
-      avatar: 'ER',
-    },
-    {
-      id: 4,
-      name: 'David Kumar',
-      batch: '2020',
-      company: 'Microsoft',
-      role: 'Cloud Solutions Architect',
-      location: 'Redmond, WA',
-      avatar: 'DK',
-    },
-    {
-      id: 5,
-      name: 'Lisa Anderson',
-      batch: '2016',
-      company: 'Apple',
-      role: 'Design Lead',
-      location: 'Cupertino, CA',
-      avatar: 'LA',
-    },
-    {
-      id: 6,
-      name: 'James Wilson',
-      batch: '2019',
-      company: 'Netflix',
-      role: 'Backend Engineer',
-      location: 'Los Gatos, CA',
-      avatar: 'JW',
-    },
-    {
-      id: 7,
-      name: 'Priya Patel',
-      batch: '2021',
-      company: 'Tesla',
-      role: 'ML Engineer',
-      location: 'Palo Alto, CA',
-      avatar: 'PP',
-    },
-    {
-      id: 8,
-      name: 'Robert Martinez',
-      batch: '2018',
-      company: 'Airbnb',
-      role: 'Engineering Manager',
-      location: 'San Francisco, CA',
-      avatar: 'RM',
-    },
-  ];
+  // Initial fetch
+  useEffect(() => {
+    getUsers();
+  }, [getUsers]);
 
-  const filteredAlumni = allAlumni.filter((alumni) => {
+  // Socket subscription
+  useEffect(() => {
+    subscribeToMessages();
+    return () => unsubscribeFromMessages();
+  }, [subscribeToMessages, unsubscribeFromMessages]);
+
+  // Scroll to bottom
+  useEffect(() => {
+    if (showChatModal && messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [messages, showChatModal]);
+
+  const filteredAlumni = users.filter((user) => {
+    if (user._id === authUser?._id) return false;
     const search = searchTerm.toLowerCase();
+    const name = user.fullName || '';
+    const batch = user.batch ? String(user.batch) : '';
+    const company = user.company || '';
+    const role = user.cur_role || user.role || '';
+    const location = user.location || '';
     return (
-      alumni.name.toLowerCase().includes(search) ||
-      alumni.batch.includes(search) ||
-      alumni.company.toLowerCase().includes(search) ||
-      alumni.role.toLowerCase().includes(search) ||
-      alumni.location.toLowerCase().includes(search)
+      name.toLowerCase().includes(search) ||
+      batch.includes(search) ||
+      company.toLowerCase().includes(search) ||
+      role.toLowerCase().includes(search) ||
+      location.toLowerCase().includes(search)
     );
   });
 
-  const handleChatClick = (alumni) => {
-    setSelectedAlumni(alumni);
+  const handleChatClick = async (user) => {
+    setSelectedUser(user);
     setShowChatModal(true);
+    await getMessagesByUserId(user._id);
   };
 
-  const handleMeetClick = (alumni) => {
-    setSelectedAlumni(alumni);
-    setShowMeetModal(true);
-  };
-
-  const handleSendChat = () => {
-    alert(`Message sent to ${selectedAlumni?.name}: ${chatMessage}`);
+  const handleSendChat = async () => {
+    if (!chatMessage.trim()) return;
+    await sendMessage({ text: chatMessage });
     setChatMessage('');
-    setShowChatModal(false);
   };
 
-  const handleScheduleMeet = () => {
-    alert(
-      `Meeting scheduled with ${selectedAlumni?.name} on ${meetData.date} at ${meetData.time}`
-    );
-    setMeetData({ date: '', time: '', message: '' });
-    setShowMeetModal(false);
+  const handleCloseChat = () => {
+    setShowChatModal(false);
+    setSelectedUser(null);
   };
 
   return (
@@ -158,69 +116,106 @@ export default function Connect() {
           Showing <span className="font-semibold">{filteredAlumni.length}</span> alumni
         </div>
 
-        <div className="grid md:grid-cols-2 gap-6">
-          {filteredAlumni.map((alumni) => (
-            <div
-              key={alumni.id}
-              className="bg-white rounded-xl shadow-md hover:shadow-xl transition-shadow p-6"
-            >
-              <div className="flex items-start space-x-4">
-                <div className="flex-shrink-0">
-                  <div className="w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center">
-                    <span className="text-white font-bold text-xl">
-                      {alumni.avatar}
-                    </span>
+        {isUsersLoading ? (
+          <div className="flex justify-center py-10">
+            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+          </div>
+        ) : (
+          <div className="grid md:grid-cols-2 gap-6">
+            {filteredAlumni.map((user) => (
+              <div key={user._id} className="bg-white rounded-xl shadow-md hover:shadow-xl transition-shadow p-6 relative">
+                {/* Avatar Badge can be handled here too if we want */}
+                <div className="flex items-start space-x-4">
+                  <div className="flex-shrink-0 relative">
+                    {user.profilePic ? (
+                      <img
+                        src={user.profilePic}
+                        alt={user.fullName}
+                        className="w-16 h-16 rounded-full object-cover"
+                      />
+                    ) : (
+                      <div className="w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center">
+                        <span className="text-white font-bold text-xl">
+                          {user.fullName?.charAt(0).toUpperCase()}
+                        </span>
+                      </div>
+                    )}
+                    {/* Unread Badge on Avatar */}
+                    {unreadCounts && unreadCounts[user._id] > 0 && (
+                      <span className="absolute -top-1 -right-1 bg-green-500 text-white text-xs font-bold w-6 h-6 flex items-center justify-center rounded-full border-2 border-white animate-bounce">
+                        {unreadCounts[user._id]}
+                      </span>
+                    )}
                   </div>
-                </div>
-                <div className="flex-1">
-                  <h3 className="text-xl font-bold text-gray-900 mb-2">
-                    {alumni.name}
-                  </h3>
-                  <div className="space-y-2 mb-4">
-                    <div className="flex items-center text-gray-600 text-sm">
-                      <Calendar className="w-4 h-4 mr-2 text-blue-600" />
-                      <span>Batch {alumni.batch}</span>
+                  <div className="flex-1">
+                    <h3 className="text-xl font-bold text-gray-900 mb-2">{user.fullName}</h3>
+                    <div className="space-y-2 mb-4">
+                      {user.batch && (
+                        <div className="flex items-center text-gray-600 text-sm">
+                          <Calendar className="w-4 h-4 mr-2 text-blue-600" />
+                          <span>Batch {user.batch}</span>
+                        </div>
+                      )}
+                      {user.company && (
+                        <div className="flex items-center text-gray-600 text-sm">
+                          <Building2 className="w-4 h-4 mr-2 text-blue-600" />
+                          <span>{user.company}</span>
+                        </div>
+                      )}
+                      {(user.cur_role || user.role) && (
+                        <div className="flex items-center text-gray-600 text-sm">
+                          <Briefcase className="w-4 h-4 mr-2 text-blue-600" />
+                          <span>{user.cur_role || user.role}</span>
+                        </div>
+                      )}
+                      {user.location && (
+                        <div className="flex items-center text-gray-600 text-sm">
+                          <MapPin className="w-4 h-4 mr-2 text-blue-600" />
+                          <span>{user.location}</span>
+                        </div>
+                      )}
                     </div>
-                    <div className="flex items-center text-gray-600 text-sm">
-                      <Building2 className="w-4 h-4 mr-2 text-blue-600" />
-                      <span>{alumni.company}</span>
+                    <div className="flex flex-wrap gap-3">
+                      <button
+                        onClick={() => handleChatClick(user)}
+                        className="flex items-center space-x-2 bg-blue-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-blue-700 transition-colors"
+                      >
+                        <MessageCircle className="w-4 h-4" />
+                        <span>Chat</span>
+                        {unreadCounts && unreadCounts[user._id] > 0 && (
+                          <span className="ml-2 bg-green-200 text-green-800 text-xs font-bold px-2 py-0.5 rounded-full">
+                            {unreadCounts[user._id]}
+                          </span>
+                        )}
+                      </button>
+
+                      <button
+                        onClick={() => {
+                          if (user.calendlyLink) {
+                            window.open(user.calendlyLink, '_blank', 'noopener,noreferrer');
+                          } else {
+                            toast.error('This user hasn\'t provided a scheduling link yet.');
+                          }
+                        }}
+                        className={`flex items-center space-x-2 px-4 py-2 rounded-lg font-semibold border-2 transition-colors ${user.calendlyLink
+                            ? 'bg-white text-blue-600 border-blue-600 hover:bg-blue-50'
+                            : 'bg-gray-100 text-gray-500 border-gray-200 cursor-not-allowed hover:bg-gray-200'
+                          }`}
+                      >
+                        <Calendar className="w-4 h-4" />
+                        <span>Schedule a meet</span>
+                      </button>
                     </div>
-                    <div className="flex items-center text-gray-600 text-sm">
-                      <Briefcase className="w-4 h-4 mr-2 text-blue-600" />
-                      <span>{alumni.role}</span>
-                    </div>
-                    <div className="flex items-center text-gray-600 text-sm">
-                      <MapPin className="w-4 h-4 mr-2 text-blue-600" />
-                      <span>{alumni.location}</span>
-                    </div>
-                  </div>
-                  <div className="flex flex-wrap gap-3">
-                    <button
-                      onClick={() => handleChatClick(alumni)}
-                      className="flex items-center space-x-2 bg-blue-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-blue-700 transition-colors"
-                    >
-                      <MessageCircle className="w-4 h-4" />
-                      <span>Chat with Alum</span>
-                    </button>
-                    <button
-                      onClick={() => handleMeetClick(alumni)}
-                      className="flex items-center space-x-2 bg-white text-blue-600 px-4 py-2 rounded-lg font-semibold border-2 border-blue-600 hover:bg-blue-50 transition-colors"
-                    >
-                      <Calendar className="w-4 h-4" />
-                      <span>Schedule a Meet</span>
-                    </button>
                   </div>
                 </div>
               </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
 
-        {filteredAlumni.length === 0 && (
+        {filteredAlumni.length === 0 && !isUsersLoading && (
           <div className="text-center py-12">
-            <p className="text-gray-600 text-lg">
-              No alumni found matching your search.
-            </p>
+            <p className="text-gray-600 text-lg">No alumni found matching your search.</p>
             <button
               onClick={() => setSearchTerm('')}
               className="mt-4 text-blue-600 font-semibold hover:text-blue-700"
@@ -231,114 +226,83 @@ export default function Connect() {
         )}
       </div>
 
-      {showChatModal && selectedAlumni && (
+      {/* CHAT MODAL */}
+      {showChatModal && selectedUser && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl shadow-2xl max-w-md w-full p-6">
-            <div className="flex justify-between items-center mb-6">
-              <h3 className="text-2xl font-bold text-gray-900">
-                Chat with {selectedAlumni.name}
-              </h3>
+          <div className="bg-white rounded-xl shadow-2xl max-w-lg w-full h-[600px] flex flex-col">
+            {/* Header */}
+            <div className="p-4 border-b flex justify-between items-center bg-gray-50 rounded-t-xl">
+              <div className="flex items-center space-x-3">
+                <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 font-bold">
+                  {selectedUser.fullName?.charAt(0)}
+                </div>
+                <div>
+                  <h3 className="font-bold text-gray-900">{selectedUser.fullName}</h3>
+                  <p className="text-xs text-green-600 flex items-center">
+                    <span className="w-2 h-2 bg-green-500 rounded-full mr-1"></span>
+                    Online
+                  </p>
+                </div>
+              </div>
               <button
-                onClick={() => setShowChatModal(false)}
-                className="text-gray-400 hover:text-gray-600"
+                onClick={handleCloseChat}
+                className="text-gray-400 hover:text-gray-600 p-1 hover:bg-gray-200 rounded-full"
               >
                 <X className="w-6 h-6" />
               </button>
             </div>
-            <textarea
-              value={chatMessage}
-              onChange={(e) => setChatMessage(e.target.value)}
-              placeholder="Type your message here..."
-              rows={6}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent outline-none resize-none"
-            />
-            <div className="mt-6 flex justify-end space-x-3">
-              <button
-                onClick={() => setShowChatModal(false)}
-                className="px-6 py-2 border border-gray-300 rounded-lg font-semibold text-gray-700 hover:bg-gray-50 transition-colors"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleSendChat}
-                className="px-6 py-2 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-colors"
-              >
-                Send Message
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
 
-      {showMeetModal && selectedAlumni && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl shadow-2xl max-w-md w-full p-6">
-            <div className="flex justify-between items-center mb-6">
-              <h3 className="text-2xl font-bold text-gray-900">
-                Schedule Meet with {selectedAlumni.name}
-              </h3>
-              <button
-                onClick={() => setShowMeetModal(false)}
-                className="text-gray-400 hover:text-gray-600"
-              >
-                <X className="w-6 h-6" />
-              </button>
+            {/* Messages Area */}
+            <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50">
+              {isMessagesLoading ? (
+                <div className="flex justify-center mt-10">
+                  <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500"></div>
+                </div>
+              ) : messages.length === 0 ? (
+                <div className="text-center text-gray-400 mt-10">
+                  <p>No messages yet.</p>
+                  <p className="text-sm">Say hello to start the conversation!</p>
+                </div>
+              ) : (
+                messages.map((msg, idx) => {
+                  const isMe = msg.senderId === authUser._id;
+                  return (
+                    <div key={idx} className={`flex ${isMe ? 'justify-end' : 'justify-start'}`}>
+                      <div className={`max-w-[75%] px-4 py-2 rounded-2xl ${isMe
+                        ? 'bg-blue-600 text-white rounded-br-none'
+                        : 'bg-white text-gray-800 border border-gray-200 rounded-bl-none shadow-sm'
+                        }`}>
+                        <p className="break-words">{msg.text}</p>
+                        <p className={`text-[10px] mt-1 ${isMe ? 'text-blue-100' : 'text-gray-400'}`}>
+                          {new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        </p>
+                      </div>
+                    </div>
+                  );
+                })
+              )}
+              <div ref={messagesEndRef} />
             </div>
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Date
-                </label>
+
+            {/* Input Area */}
+            <div className="p-4 border-t bg-white rounded-b-xl">
+              <div className="flex items-center space-x-2">
                 <input
-                  type="date"
-                  value={meetData.date}
-                  onChange={(e) =>
-                    setMeetData({ ...meetData, date: e.target.value })
-                  }
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent outline-none"
+                  type="text"
+                  value={chatMessage}
+                  onChange={(e) => setChatMessage(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && handleSendChat()}
+                  placeholder="Type a message..."
+                  className="flex-1 px-4 py-3 border border-gray-300 rounded-full focus:ring-2 focus:ring-blue-600 focus:border-transparent outline-none"
                 />
+                <button
+                  onClick={handleSendChat}
+                  disabled={!chatMessage.trim()}
+                  className="bg-blue-600 text-white p-3 rounded-full hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                >
+                  <Send className="w-5 h-5" />
+                </button>
               </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Time
-                </label>
-                <input
-                  type="time"
-                  value={meetData.time}
-                  onChange={(e) =>
-                    setMeetData({ ...meetData, time: e.target.value })
-                  }
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent outline-none"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Message (Optional)
-                </label>
-                <textarea
-                  value={meetData.message}
-                  onChange={(e) =>
-                    setMeetData({ ...meetData, message: e.target.value })
-                  }
-                  placeholder="Add a message..."
-                  rows={4}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent outline-none resize-none"
-                />
-              </div>
-            </div>
-            <div className="mt-6 flex justify-end space-x-3">
-              <button
-                onClick={() => setShowMeetModal(false)}
-                className="px-6 py-2 border border-gray-300 rounded-lg font-semibold text-gray-700 hover:bg-gray-50 transition-colors"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleScheduleMeet}
-                className="px-6 py-2 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-colors"
-              >
-                Schedule
-              </button>
             </div>
           </div>
         </div>

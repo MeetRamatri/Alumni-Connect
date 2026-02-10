@@ -3,10 +3,18 @@ import Opportunity from "../models/Opportunity.model.js";
 
 const router = express.Router();
 
-// Create a new opportunity
-router.post("/", async (req, res) => {
+import { protectRoute } from "../middleware/auth.middleware.js";
+
+// Create a new opportunity (Protected, Alumni only logic can be added here or in controller)
+router.post("/", protectRoute, async (req, res) => {
     try {
-        const newOpportunity = new Opportunity(req.body);
+        // Optional: Check if user is alumni
+        // if (req.user.role !== 'alumni') return res.status(403).json({ message: "Only alumni can post opportunities" });
+
+        const newOpportunity = new Opportunity({
+            ...req.body,
+            postedBy: req.user._id
+        });
         const savedOpportunity = await newOpportunity.save();
         res.status(201).json(savedOpportunity);
     } catch (err) {
@@ -17,7 +25,7 @@ router.post("/", async (req, res) => {
 // Get all opportunities
 router.get("/", async (req, res) => {
     try {
-        const opportunities = await Opportunity.find();
+        const opportunities = await Opportunity.find().populate("postedBy", "fullName profilePic batch");
         res.json(opportunities);
     } catch (err) {
         res.status(500).json({ message: err.message });

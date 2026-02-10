@@ -18,7 +18,7 @@ const userSchema = new mongoose.Schema(
 
     role: {
       type: String,
-      enum: ["student", "alumni"],
+      enum: ["student", "alumni", "admin"],
       default: "student",
     },
 
@@ -39,6 +39,11 @@ const userSchema = new mongoose.Schema(
     },
 
     profilePic: {
+      type: String,
+      default: "",
+    },
+
+    calendlyLink: {
       type: String,
       default: "",
     },

@@ -2,7 +2,7 @@ import { create } from "zustand";
 import { axiosInstance } from "../lib/axios";
 import toast from "react-hot-toast";
 import { io } from "socket.io-client";
-const BASE_URL = import.meta.env.MODE === "development" ? "https://alumni-connect-obs9.onrender.com/" : "/"
+const BASE_URL = import.meta.env.MODE === "development" ? "http://localhost:3000" : "/";
 export const useAuthStore = create((set, get) => ({
     authUser: null,
     isCheckingAuth: true,
@@ -15,11 +15,10 @@ export const useAuthStore = create((set, get) => ({
         try {
             const res = await axiosInstance.get("/auth/check");
             set({ authUser: res.data.user });
-            // get().connectSocket() // Disabled until socket.io is set up on backend
+            get().connectSocket()
         } catch (err) {
             console.log("Auth check error:", err);
             set({ authUser: null });
-
         }
         finally {
             set({ isCheckingAuth: false });
@@ -35,7 +34,7 @@ export const useAuthStore = create((set, get) => ({
             )
             set({ authUser: res.data.user })
             toast.success("Account created successfully!")
-            // get().connectSocket() // Disabled until socket.io is set up on backend
+            get().connectSocket()
             return true;
         } catch (err) {
             console.error("Signup error:", err.response?.data);
@@ -53,7 +52,7 @@ export const useAuthStore = create((set, get) => ({
             console.log("Loged in")
             set({ authUser: res.data.user })
             toast.success("Logged in successfully")
-            // get().connectSocket() // Disabled until socket.io is set up on backend
+            get().connectSocket()
         } catch (err) {
             toast.error(err.response?.data?.message || "Login failed")
         }

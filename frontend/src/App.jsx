@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { useAuthStore } from './store/useAuthStore';
 import { useEffect } from 'react';
 import { Toaster } from 'react-hot-toast';
@@ -15,10 +15,10 @@ import Connect from './pages/Connect';
 import Profile from './pages/Profile';
 import Login from './pages/Login';
 import Signup from './pages/SignUp';
-import EventDetails from './pages/EventDetails';   // ⬅️ NEW
+import EventDetails from './pages/EventDetails';
 
 function App() {
-  const { checkAuth, isCheckingAuth } = useAuthStore();
+  const { authUser, checkAuth, isCheckingAuth } = useAuthStore();
 
   useEffect(() => {
     checkAuth();
@@ -40,21 +40,24 @@ function App() {
             <Route path="/" element={<Home />} />
 
             {/* Opportunities */}
-            <Route path="/opportunities" element={<Opportunities />} />
-            <Route path="/opportunities/:id" element={<OpportunityDetails />} />
+            <Route path="/opportunities" element={authUser ? <Opportunities /> : <Navigate to="/login" />} />
+            <Route path="/opportunities/:id" element={authUser ? <OpportunityDetails /> : <Navigate to="/login" />} />
 
             {/* Events */}
-            <Route path="/events/:id" element={<EventDetails />} />
+            <Route path="/events/:id" element={authUser ? <EventDetails /> : <Navigate to="/login" />} />
 
             {/* Clubs & Culture */}
-            <Route path="/clubs-culture" element={<ClubsCulture />} />
-            <Route path="/clubs-culture/:id" element={<ClubsCultureDetails />} />
+            <Route path="/clubs-culture" element={authUser ? <ClubsCulture /> : <Navigate to="/login" />} />
+            <Route path="/clubs-culture/:id" element={authUser ? <ClubsCultureDetails /> : <Navigate to="/login" />} />
 
             {/* Other pages */}
-            <Route path="/connect" element={<Connect />} />
-            <Route path="/profile" element={<Profile />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/signup" element={<Signup />} />
+            <Route path="/connect" element={authUser ? <Connect /> : <Navigate to="/login" />} />
+            <Route path="/profile" element={authUser ? <Profile /> : <Navigate to="/login" />} />
+            <Route path="/login" element={!authUser ? <Login /> : <Navigate to="/" />} />
+            <Route path="/signup" element={!authUser ? <Signup /> : <Navigate to="/" />} />
+
+            {/* Redirects */}
+            <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </main>
         <Footer />

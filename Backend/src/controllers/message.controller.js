@@ -1,6 +1,6 @@
 import cloudinary from "../lib/cloudinary.js";
 import { getRecieverSocketId, io } from "../lib/socket.js";
-import User from "../models/user.model.js";
+import User from "../models/User.model.js";
 import Message from "../models/Message.model.js";
 export const getAllContacts = async (req, res) => {
   try {
@@ -106,6 +106,55 @@ export const getChatPartners = async (req, res) => {
     res.status(200).json(chatPartners);
   } catch (err) {
     console.log("Error in getChatPartners:", err);
+    res.status(500).json({ message: "Server Error" });
+  }
+};
+
+export const getUnreadCounts = async (req, res) => {
+  try {
+    const userId = req.user._id;
+    // Aggregation pipeline to count unread messages grouped by sender
+    const unreadCounts = await Message.aggregate([
+      {
+        $match: {
+          receiverId: userId,
+          isRead: false
+        }
+      },
+      {
+        $group: {
+          _id: "$senderId",
+          count: { $sum: 1 }
+        }
+      }
+    ]);
+
+    // Transform array to object { senderId: count }
+    const countsMap = unreadCounts.reduce((acc, curr) => {
+      acc[curr._id] = curr.count;
+      return acc;
+    }, {});
+
+    res.status(200).json(countsMap);
+  } catch (err) {
+    console.log("Error in getUnreadCounts:", err);
+    res.status(500).json({ message: "Server Error" });
+  }
+};
+
+export const markMessagesAsRead = async (req, res) => {
+  try {
+    const userId = req.user._id;
+    const senderId = req.params.id;
+
+    await Message.updateMany(
+      { senderId: senderId, receiverId: userId, isRead: false },
+      { $set: { isRead: true } }
+    );
+
+    res.status(200).json({ message: "Messages marked as read" });
+  } catch (err) {
+    console.log("Error in markMessagesAsRead:", err);
     res.status(500).json({ message: "Server Error" });
   }
 };

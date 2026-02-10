@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Code,
@@ -10,148 +11,100 @@ import {
   Calendar,
   Users,
   Crown,
+  Plus,
+  X
 } from 'lucide-react';
+import { axiosInstance } from '../lib/axios';
+import { useAuthStore } from '../store/useAuthStore';
+import toast from 'react-hot-toast';
 
-// Export so details page also can use same data
-export const clubsData = [
-  {
-    id: 1,
-    name: 'Tech Club',
-    description:
-      'Learn programming, participate in hackathons, and build innovative projects with fellow tech enthusiasts.',
-    longDescription:
-      'The Tech Club is the hub for all things technology on campus. From coding bootcamps and competitive programming sessions to hackathons and project showcases, we provide a platform for students to build, learn, and collaborate. Members get exposure to latest technologies, mentorship from alumni, and opportunities to work on real-world projects.',
-    icon: Code,
-    tag: 'Technical',
-    color: 'bg-blue-100 text-blue-800',
-    president: 'Rahul Verma',
-    vicePresident: 'Sneha Gupta',
-    members: ['Aman Sharma', 'Priya Nair', 'Karan Singh', 'Neha Patel'],
-    memberCount: '80+ active members',
-    achievements: [
-      'Winners of National Hackathon 2024',
-      'Organized 10+ coding contests in the last year',
-      'Contributed to 5 open-source projects',
-    ],
-  },
-  {
-    id: 2,
-    name: 'Cultural Club',
-    description:
-      'Celebrate diversity through cultural events, festivals, and performances from around the world.',
-    longDescription:
-      'The Cultural Club is the heart of college celebrations. We organize festivals, cultural nights, traditional days, and theme events that bring together students from all backgrounds. The club aims to promote inclusivity, cultural awareness, and a sense of belonging.',
-    icon: Sparkles,
-    tag: 'Cultural',
-    color: 'bg-purple-100 text-purple-800',
-    president: 'Ananya Singh',
-    vicePresident: 'Rohit Mehta',
-    members: ['Meera Joshi', 'Ali Khan', 'Riya Das'],
-    memberCount: '60+ active members',
-    achievements: [
-      'Organized Annual Cultural Night with 1000+ attendees',
-      'Winners of Inter-College Cultural Fest 2023',
-    ],
-  },
-  {
-    id: 3,
-    name: 'Sports Club',
-    description:
-      'Stay active and competitive with various sports activities, tournaments, and fitness programs.',
-    longDescription:
-      'Sports Club promotes physical fitness, teamwork, and a competitive spirit. The club manages teams for cricket, football, basketball, volleyball, and athletics, and regularly conducts intra-college and inter-college tournaments.',
-    icon: Trophy,
-    tag: 'Sports',
-    color: 'bg-green-100 text-green-800',
-    president: 'Vikram Singh',
-    vicePresident: 'Manish Kumar',
-    members: ['Saurabh Yadav', 'Deepak Rao', 'Ajay Sharma'],
-    memberCount: '100+ athletes',
-    achievements: [
-      'Winners of Inter-College Football Championship',
-      'Runner-up in State-Level Athletics Meet',
-    ],
-  },
-  {
-    id: 4,
-    name: 'Music Club',
-    description:
-      'Express yourself through music, jam sessions, concerts, and collaborative performances.',
-    longDescription:
-      'Music Club is a community of singers, instrumentalists, composers, and music lovers. We host unplugged nights, band performances, and workshops on music production and instruments.',
-    icon: Music,
-    tag: 'Cultural',
-    color: 'bg-pink-100 text-pink-800',
-    president: 'Ishita Rao',
-    vicePresident: 'Rohan Malhotra',
-    members: ['Aditya Joshi', 'Simran Kaur', 'Nikhil Jain'],
-    memberCount: '40+ performers',
-    achievements: [
-      'Winners of Battle of Bands 2024',
-      'Regular performers at city cultural events',
-    ],
-  },
-  {
-    id: 5,
-    name: 'Drama Club',
-    description:
-      'Explore the art of theater with plays, skits, workshops, and dramatic performances.',
-    longDescription:
-      'Drama Club focuses on stage performance, direction, scriptwriting, and production. Members perform stage plays, street plays (nukkad natak), and participate in inter-college theater competitions.',
-    icon: Theater,
-    tag: 'Cultural',
-    color: 'bg-yellow-100 text-yellow-800',
-    president: 'Kunal Sharma',
-    vicePresident: 'Pooja Jain',
-    members: ['Harshita Singh', 'Mohit Agarwal', 'Ritu Kumari'],
-    memberCount: '35+ performers',
-    achievements: [
-      'Best Play Award at University Fest',
-      'Street play campaigns on social issues',
-    ],
-  },
-  {
-    id: 6,
-    name: 'Entrepreneurship Cell',
-    description:
-      'Turn your ideas into reality with mentorship, funding opportunities, and startup workshops.',
-    longDescription:
-      'The E-Cell nurtures the entrepreneurial spirit among students. We conduct ideation sessions, startup weekends, pitch days, and connect students with mentors and investors.',
-    icon: Lightbulb,
-    tag: 'Technical',
-    color: 'bg-orange-100 text-orange-800',
-    president: 'Arjun Menon',
-    vicePresident: 'Shreya Kapoor',
-    members: ['Rahul Jain', 'Neeraj Verma', 'Ankit Tiwari'],
-    memberCount: '50+ aspiring founders',
-    achievements: [
-      'Incubated 5 student-led startups',
-      'MoU with local startup incubator',
-    ],
-  },
-  {
-    id: 7,
-    name: 'Art Club',
-    description:
-      'Unleash your creativity through painting, sketching, digital art, and various artistic mediums.',
-    longDescription:
-      'Art Club is a space for visual creativity—painting, sketching, doodling, digital art, and crafts. We organize exhibitions, live art sessions, and workshops.',
-    icon: Palette,
-    tag: 'Cultural',
-    color: 'bg-red-100 text-red-800',
-    president: 'Riya Kulkarni',
-    vicePresident: 'Siddharth Rao',
-    members: ['Swati Mishra', 'Varun Gupta', 'Divya Sharma'],
-    memberCount: '45+ artists',
-    achievements: [
-      'Organized Annual Art Exhibition',
-      'Wall art and murals across campus',
-    ],
-  },
+// Map string names to components
+const iconMap = {
+  Code,
+  Music,
+  Trophy,
+  Palette,
+  Theater,
+  Lightbulb,
+  Sparkles,
+  Calendar,
+  Users,
+  Crown
+};
+
+const predefinedColors = [
+  'bg-blue-100 text-blue-800',
+  'bg-purple-100 text-purple-800',
+  'bg-green-100 text-green-800',
+  'bg-pink-100 text-pink-800',
+  'bg-yellow-100 text-yellow-800',
+  'bg-orange-100 text-orange-800',
+  'bg-red-100 text-red-800',
+  'bg-indigo-100 text-indigo-800',
 ];
 
 export default function ClubsCulture() {
   const navigate = useNavigate();
+  const { authUser } = useAuthStore();
+  const [clubs, setClubs] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // New Club Form State
+  const [newClub, setNewClub] = useState({
+    name: '',
+    description: '',
+    longDescription: '',
+    tag: 'Cultural',
+    icon: 'Users',
+    color: 'bg-blue-100 text-blue-800',
+    president: '',
+    vicePresident: '',
+    memberCount: '',
+  });
+
+  useEffect(() => {
+    fetchClubs();
+  }, []);
+
+  const fetchClubs = async () => {
+    try {
+      const res = await axiosInstance.get('/clubs');
+      setClubs(res.data);
+    } catch (err) {
+      console.error("Failed to fetch clubs", err);
+      toast.error("Failed to load clubs");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleCreateClub = async (e) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    try {
+      const res = await axiosInstance.post('/clubs', newClub);
+      setClubs([...clubs, res.data]);
+      setIsModalOpen(false);
+      setNewClub({
+        name: '',
+        description: '',
+        longDescription: '',
+        tag: 'Cultural',
+        icon: 'Users',
+        color: 'bg-blue-100 text-blue-800',
+        president: '',
+        vicePresident: '',
+        memberCount: '',
+      });
+      toast.success("Club created successfully!");
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Failed to create club");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
@@ -165,44 +118,69 @@ export default function ClubsCulture() {
 
         {/* CLUBS GRID */}
         <div className="mb-16">
-          <h2 className="text-3xl font-bold text-gray-900 mb-8 text-center">
-            Our Clubs
-          </h2>
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {clubsData.map((club) => (
-              <div
-                key={club.id}
-                className="bg-white rounded-xl shadow-md hover:shadow-xl transition-all p-6 border border-gray-200 hover:border-blue-300"
-              >
-                <div className="flex items-start justify-between mb-4">
-                  <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-                    <club.icon className="w-6 h-6 text-blue-600" />
-                  </div>
-                  <span
-                    className={`px-3 py-1 rounded-full text-xs font-semibold ${club.color}`}
-                  >
-                    {club.tag}
-                  </span>
-                </div>
-                <h3 className="text-xl font-bold text-gray-900 mb-1">
-                  {club.name}
-                </h3>
-                <p className="text-xs text-gray-500 mb-2 flex items-center">
-                  <Crown className="w-3 h-3 mr-1 text-yellow-500" />
-                  Current President: {club.president}
-                </p>
-                <p className="text-gray-600 mb-4 leading-relaxed">
-                  {club.description}
-                </p>
+          <div className="flex justify-between items-center mb-8">
+            <h2 className="text-3xl font-bold text-gray-900 text-center w-full relative">
+              Our Clubs
+              {authUser?.role === 'admin' && (
                 <button
-                  onClick={() => navigate(`/clubs-culture/${club.id}`)}
-                  className="w-full bg-blue-600 text-white py-2 rounded-lg font-semibold hover:bg-blue-700 transition-colors"
+                  onClick={() => setIsModalOpen(true)}
+                  className="absolute right-0 top-1/2 transform -translate-y-1/2 bg-blue-600 text-white p-2 rounded-full hover:bg-blue-700 transition-colors shadow-lg"
+                  title="Add New Club"
                 >
-                  Know More
+                  <Plus className="w-6 h-6" />
                 </button>
-              </div>
-            ))}
+              )}
+            </h2>
           </div>
+
+          {loading ? (
+            <div className="flex justify-center py-12">
+              <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+            </div>
+          ) : clubs.length === 0 ? (
+            <div className="text-center py-12 text-gray-500">
+              No clubs found.
+            </div>
+          ) : (
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {clubs.map((club) => {
+                const IconComponent = iconMap[club.icon] || Users;
+                return (
+                  <div
+                    key={club._id}
+                    className="bg-white rounded-xl shadow-md hover:shadow-xl transition-all p-6 border border-gray-200 hover:border-blue-300"
+                  >
+                    <div className="flex items-start justify-between mb-4">
+                      <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                        <IconComponent className="w-6 h-6 text-blue-600" />
+                      </div>
+                      <span
+                        className={`px-3 py-1 rounded-full text-xs font-semibold ${club.color || 'bg-gray-100 text-gray-800'}`}
+                      >
+                        {club.tag}
+                      </span>
+                    </div>
+                    <h3 className="text-xl font-bold text-gray-900 mb-1">
+                      {club.name}
+                    </h3>
+                    <p className="text-xs text-gray-500 mb-2 flex items-center">
+                      <Crown className="w-3 h-3 mr-1 text-yellow-500" />
+                      Current President: {club.president || 'TBD'}
+                    </p>
+                    <p className="text-gray-600 mb-4 leading-relaxed line-clamp-3">
+                      {club.description}
+                    </p>
+                    <button
+                      onClick={() => navigate(`/clubs-culture/${club._id}`)}
+                      className="w-full bg-blue-600 text-white py-2 rounded-lg font-semibold hover:bg-blue-700 transition-colors"
+                    >
+                      Know More
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </div>
 
         {/* CULTURE HIGHLIGHTS */}
@@ -267,6 +245,112 @@ export default function ClubsCulture() {
           </div>
         </div>
       </div>
+
+      {/* ADD CLUB MODAL */}
+      {isModalOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6 border-b flex justify-between items-center bg-gray-50 rounded-t-xl">
+              <h3 className="text-xl font-bold text-gray-900">Add New Club</h3>
+              <button
+                onClick={() => setIsModalOpen(false)}
+                className="text-gray-400 hover:text-gray-600 p-1 hover:bg-gray-200 rounded-full"
+              >
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+            <form onSubmit={handleCreateClub} className="p-6 space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Club Name</label>
+                <input
+                  type="text"
+                  required
+                  value={newClub.name}
+                  onChange={(e) => setNewClub({ ...newClub, name: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Short Description</label>
+                <textarea
+                  required
+                  value={newClub.description}
+                  onChange={(e) => setNewClub({ ...newClub, description: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none h-20"
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Tag</label>
+                  <select
+                    value={newClub.tag}
+                    onChange={(e) => setNewClub({ ...newClub, tag: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                  >
+                    <option value="Technical">Technical</option>
+                    <option value="Cultural">Cultural</option>
+                    <option value="Sports">Sports</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Icon</label>
+                  <select
+                    value={newClub.icon}
+                    onChange={(e) => setNewClub({ ...newClub, icon: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                  >
+                    {Object.keys(iconMap).map(icon => (
+                      <option key={icon} value={icon}>{icon}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Card Color Theme</label>
+                <div className="flex flex-wrap gap-2">
+                  {predefinedColors.map((color, idx) => (
+                    <button
+                      key={idx}
+                      type="button"
+                      onClick={() => setNewClub({ ...newClub, color })}
+                      className={`w-8 h-8 rounded-full border-2 ${newClub.color === color ? 'border-black' : 'border-transparent'} ${color.split(' ')[0]}`}
+                    />
+                  ))}
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">President</label>
+                  <input
+                    type="text"
+                    value={newClub.president}
+                    onChange={(e) => setNewClub({ ...newClub, president: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Vice President</label>
+                  <input
+                    type="text"
+                    value={newClub.vicePresident}
+                    onChange={(e) => setNewClub({ ...newClub, vicePresident: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                  />
+                </div>
+              </div>
+              <div className="flex justify-end pt-4">
+                <button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="bg-blue-600 text-white px-6 py-2 rounded-lg font-semibold hover:bg-blue-700 transition-colors disabled:opacity-50"
+                >
+                  {isSubmitting ? 'Creating...' : 'Create Club'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

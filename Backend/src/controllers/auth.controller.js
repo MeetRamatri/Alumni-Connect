@@ -1,4 +1,4 @@
-import User from "../models/user.model.js";
+import User from "../models/User.model.js";
 import bcrypt from "bcryptjs"
 import { generateTokenAndSetCookie } from "../utils/generateTokenAndSetCookie.js";
 import cloudinary from "../lib/cloudinary.js";
@@ -115,22 +115,30 @@ export const checkAuth = async (req, res) => {
     }
 }
 export const updateProfile = async (req, res) => {
-  try {
-    const { profilePic } = req.body;
-    if (!profilePic)
-      return res.status(400).json({ message: "Profile picture is required" });
+    try {
+        const { profilePic, ...otherFields } = req.body;
+        let updatedFields = { ...otherFields };
 
-    const uploaded = await cloudinary.uploader.upload(profilePic);
+        if (profilePic) {
+            // If it's a base64 string (new upload), upload to cloudinary
+            if (profilePic.startsWith("data:image")) {
+                const uploaded = await cloudinary.uploader.upload(profilePic);
+                updatedFields.profilePic = uploaded.secure_url;
+            } else {
+                // If it's already a URL, just save it (or ignore if no change)
+                updatedFields.profilePic = profilePic;
+            }
+        }
 
-    const updatedUser = await User.findByIdAndUpdate(
-      req.user._id,
-      { profilePic: uploaded.secure_url },
-      { new: true }
-    );
+        const updatedUser = await User.findByIdAndUpdate(
+            req.user._id,
+            updatedFields,
+            { new: true }
+        );
 
-    res.status(200).json(updatedUser);
-  } catch (err) {
-    console.log("Profile Update Error:", err);
-    res.status(500).json({ message: "Server Error" });
-  }
+        res.status(200).json(updatedUser);
+    } catch (err) {
+        console.log("Profile Update Error:", err);
+        res.status(500).json({ message: "Server Error" });
+    }
 };

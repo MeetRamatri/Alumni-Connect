@@ -1,5 +1,6 @@
 import express from "express";
 import Clubs from "../models/Clubs.model.js";
+import { protectRoute } from "../middleware/auth.middleware.js";
 
 const router = express.Router();
 
@@ -26,36 +27,32 @@ router.get("/:id", async (req, res) => {
     }
 });
 
-// Create a new club (POST /api/clubs)
-router.post("/", async (req, res) => {
+// Create a new club (Protected: Admin only)
+router.post("/", protectRoute, async (req, res) => {
     try {
-        // Adjust fields according to your Clubs.schema
-        const club = new Clubs({
-            name: req.body.name,
-            description: req.body.description,
-            image: req.body.image,
-            // add any other fields here...
-        });
+        if (req.user.role !== "admin") {
+            return res.status(403).json({ message: "Access denied. Admin only." });
+        }
 
+        const club = new Clubs(req.body);
         const savedClub = await club.save();
         res.status(201).json(savedClub);
     } catch (err) {
-        res.status(400).json({ message: err.message }); // validation errors etc.
+        res.status(400).json({ message: err.message });
     }
 });
 
-// Update an existing club (PUT /api/clubs/:id)
-router.put("/:id", async (req, res) => {
+// Update an existing club (Protected: Admin only)
+router.put("/:id", protectRoute, async (req, res) => {
     try {
+        if (req.user.role !== "admin") {
+            return res.status(403).json({ message: "Access denied. Admin only." });
+        }
+
         const updatedClub = await Clubs.findByIdAndUpdate(
             req.params.id,
-            {
-                $set: req.body, // or list specific fields you allow to update
-            },
-            {
-                new: true,          // return the updated document
-                runValidators: true // run schema validators on update
-            }
+            req.body,
+            { new: true, runValidators: true }
         );
 
         if (!updatedClub) {
@@ -68,9 +65,13 @@ router.put("/:id", async (req, res) => {
     }
 });
 
-// Delete a club (DELETE /api/clubs/:id)
-router.delete("/:id", async (req, res) => {
+// Delete a club (Protected: Admin only)
+router.delete("/:id", protectRoute, async (req, res) => {
     try {
+        if (req.user.role !== "admin") {
+            return res.status(403).json({ message: "Access denied. Admin only." });
+        }
+
         const deletedClub = await Clubs.findByIdAndDelete(req.params.id);
 
         if (!deletedClub) {

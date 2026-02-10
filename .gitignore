@@ -19,6 +19,7 @@ build/
 .cache/
 out/
 .vite/
+mongodb_data/
 
 # Coverage
 coverage/

@@ -9,7 +9,7 @@ export default function Signup() {
     password: '',
     batch: '',
     company: '',
-    role: '',
+    role: 'student',
     cur_role: '',
     location: '',
   });
@@ -18,10 +18,22 @@ export default function Signup() {
   const navigate = useNavigate();
 
   const handleChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value,
-    });
+    const { name, value } = e.target;
+
+    // If switching to student, clear alumni-specific fields
+    if (name === 'role' && value === 'student') {
+      setFormData({
+        ...formData,
+        [name]: value,
+        cur_role: '',
+        company: ''
+      });
+    } else {
+      setFormData({
+        ...formData,
+        [name]: value,
+      });
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -138,7 +150,7 @@ export default function Signup() {
               htmlFor="role"
               className="block text-sm font-medium text-gray-700 mb-1"
             >
-              Role (Student/Alumni)
+              Role
             </label>
             <select
               id="role"
@@ -148,49 +160,54 @@ export default function Signup() {
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent outline-none transition-all"
               autoComplete="off"
             >
-              <option value="">Select role (optional)</option>
+
               <option value="student">Student</option>
               <option value="alumni">Alumni</option>
+              <option value="admin">Admin</option>
             </select>
           </div>
 
-          <div>
-            <label
-              htmlFor="cur_role"
-              className="block text-sm font-medium text-gray-700 mb-1"
-            >
-              Current Job Role
-            </label>
-            <input
-              id="cur_role"
-              name="cur_role"
-              type="text"
-              value={formData.cur_role}
-              onChange={handleChange}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent outline-none transition-all"
-              placeholder="Software Engineer"
-              autoComplete="organization-title"
-            />
-          </div>
+          {formData.role === 'alumni' && (
+            <>
+              <div>
+                <label
+                  htmlFor="cur_role"
+                  className="block text-sm font-medium text-gray-700 mb-1"
+                >
+                  Current Job Role
+                </label>
+                <input
+                  id="cur_role"
+                  name="cur_role"
+                  type="text"
+                  value={formData.cur_role}
+                  onChange={handleChange}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent outline-none transition-all"
+                  placeholder="Software Engineer"
+                  autoComplete="organization-title"
+                />
+              </div>
 
-          <div>
-            <label
-              htmlFor="company"
-              className="block text-sm font-medium text-gray-700 mb-1"
-            >
-              Current Company
-            </label>
-            <input
-              id="company"
-              name="company"
-              type="text"
-              value={formData.company}
-              onChange={handleChange}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent outline-none transition-all"
-              placeholder="Tech Corp"
-              autoComplete="organization"
-            />
-          </div>
+              <div>
+                <label
+                  htmlFor="company"
+                  className="block text-sm font-medium text-gray-700 mb-1"
+                >
+                  Current Company
+                </label>
+                <input
+                  id="company"
+                  name="company"
+                  type="text"
+                  value={formData.company}
+                  onChange={handleChange}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent outline-none transition-all"
+                  placeholder="Tech Corp"
+                  autoComplete="organization"
+                />
+              </div>
+            </>
+          )}
 
           <div>
             <label

@@ -29,6 +29,7 @@ export default function Profile() {
     role: user?.role || '',
     location: user?.location || '',
     clubs: user?.clubs || '',
+    calendlyLink: user?.calendlyLink || '',
     profilePic: user?.profilePic || '',
   });
 
@@ -124,6 +125,7 @@ export default function Profile() {
                   { label: "Role", icon: Briefcase, name: "role" },
                   { label: "Location", icon: MapPin, name: "location" },
                   { label: "Clubs / Societies", icon: Users, name: "clubs" },
+                  { label: "Calendly Link", icon: Calendar, name: "calendlyLink", type: "url", placeholder: "https://calendly.com/your-username" },
                 ].map((field, index) => (
                   <div key={index}>
                     <label className="flex items-center text-sm font-medium text-gray-700 mb-2">
@@ -133,8 +135,9 @@ export default function Profile() {
                     <input
                       type={field.type || "text"}
                       name={field.name}
-                      value={formData[field.name]}
+                      value={formData[field.name] || ''}
                       onChange={handleChange}
+                      placeholder={field.placeholder || ''}
                       className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent outline-none"
                     />
                   </div>
@@ -170,6 +173,7 @@ export default function Profile() {
                   { label: "Role", icon: Briefcase, value: user.role },
                   { label: "Location", icon: MapPin, value: user.location },
                   { label: "Clubs / Societies", icon: Users, value: user.clubs || "Not Mentioned" },
+                  { label: "Calendly Link", icon: Calendar, value: user.calendlyLink || "Not Set" },
                 ].map((field, index) => (
                   <div key={index} className="border-b border-gray-200 pb-4">
                     <div className="flex items-center text-gray-600 mb-2">

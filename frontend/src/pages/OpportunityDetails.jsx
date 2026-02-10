@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
   Briefcase,
@@ -8,18 +9,42 @@ import {
   CheckCircle2,
   ListChecks,
 } from 'lucide-react';
-import { allOpportunities } from './Opportunities';
+import { axiosInstance } from '../lib/axios';
+import toast from 'react-hot-toast';
 
 export default function OpportunityDetails() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const [opportunity, setOpportunity] = useState(null);
+  const [loading, setLoading] = useState(true);
 
-  const opportunity = allOpportunities.find((opp) => opp.id === Number(id));
+  useEffect(() => {
+    const fetchOpportunity = async () => {
+      try {
+        const res = await axiosInstance.get(`/opportunities/${id}`);
+        setOpportunity(res.data);
+      } catch (err) {
+        console.error("Failed to fetch opportunity", err);
+        toast.error("Failed to load opportunity details");
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchOpportunity();
+  }, [id]);
 
   const handleApply = () => {
     // Yaha later real apply flow aa sakta hai
     alert(`Apply clicked for: ${opportunity.title} at ${opportunity.company}`);
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+      </div>
+    );
+  }
 
   if (!opportunity) {
     return (
@@ -69,11 +94,10 @@ export default function OpportunityDetails() {
                 <div className="flex items-center">
                   <Clock className="w-4 h-4 mr-2 text-blue-600" />
                   <span
-                    className={`px-3 py-1 rounded-full text-sm font-medium ${
-                      opportunity.type === 'Internship'
+                    className={`px-3 py-1 rounded-full text-sm font-medium ${opportunity.type === 'Internship'
                         ? 'bg-green-100 text-green-800'
                         : 'bg-blue-100 text-blue-800'
-                    }`}
+                      }`}
                   >
                     {opportunity.type}
                   </span>

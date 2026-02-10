@@ -159,119 +159,148 @@ export default function ClubsCultureDetails() {
           Back
         </button>
 
-        <div className="bg-white rounded-2xl shadow-lg p-8 relative">
-          {/* Edit Button for Admins */}
-          {authUser?.role === 'admin' && (
-            <button
-              onClick={() => setIsEditModalOpen(true)}
-              className="absolute top-8 right-8 text-gray-400 hover:text-blue-600 transition-colors"
-              title="Edit Club"
-            >
-              <Edit className="w-6 h-6" />
-            </button>
-          )}
+        <div className="bg-white rounded-2xl shadow-xl overflow-hidden relative">
+          {/* Decorative Background for Header */}
+          <div className={`h-32 bg-gradient-to-r ${club.color ? club.color.replace('text', 'from').replace('800', '500').split(' ')[0] + ' to-blue-500' : 'from-blue-500 to-indigo-600'}`}></div>
 
-          {/* Header */}
-          <div className="flex flex-wrap items-start justify-between gap-4 mb-6 pr-12">
-            <div className="flex items-center space-x-4">
-              <div className="w-14 h-14 bg-blue-100 rounded-xl flex items-center justify-center">
-                <IconComponent className="w-8 h-8 text-blue-600" />
+          <div className="px-8 pb-8">
+            {/* Header Content */}
+            <div className="relative -mt-12 flex flex-col md:flex-row items-start md:items-end gap-6 mb-8">
+              <div className="w-24 h-24 bg-white rounded-2xl p-1 shadow-lg">
+                <div className={`w-full h-full ${club.color ? club.color.split(' ')[0] : 'bg-blue-100'} rounded-xl flex items-center justify-center`}>
+                  <IconComponent className={`w-12 h-12 ${club.color ? club.color.split(' ')[1] : 'text-blue-600'}`} />
+                </div>
               </div>
-              <div>
-                <h1 className="text-3xl font-bold text-gray-900">{club.name}</h1>
-                <p className="text-sm text-gray-500 mt-1">{club.tag} Club</p>
-              </div>
-            </div>
 
-            <div className="text-right">
-              <p className="text-sm text-gray-500 mb-1">Members</p>
-              <p className="text-lg font-semibold text-gray-800">
-                {club.memberCount || 'N/A'}
-              </p>
-            </div>
-          </div>
-
-          {/* Leadership */}
-          <section className="mb-6">
-            <h2 className="text-xl font-semibold text-gray-900 mb-3 flex items-center">
-              <Crown className="w-5 h-5 mr-2 text-yellow-500" />
-              Leadership
-            </h2>
-            <div className="grid md:grid-cols-2 gap-4">
-              <div className="border border-gray-200 rounded-lg p-4">
-                <p className="text-xs text-gray-500 mb-1">President</p>
-                <p className="font-semibold text-gray-900">{club.president || 'TBD'}</p>
-              </div>
-              <div className="border border-gray-200 rounded-lg p-4">
-                <p className="text-xs text-gray-500 mb-1">Vice President</p>
-                <p className="font-semibold text-gray-900">{club.vicePresident || 'TBD'}</p>
-              </div>
-            </div>
-          </section>
-
-          {/* Members */}
-          <section className="mb-6">
-            <h2 className="text-xl font-semibold text-gray-900 mb-3 flex items-center">
-              <Users className="w-5 h-5 mr-2 text-blue-600" />
-              Core Members
-            </h2>
-            {club.members && club.members.length > 0 ? (
-              <div className="flex flex-wrap gap-2">
-                {club.members.map((member, index) => (
-                  <span
-                    key={index}
-                    className="px-3 py-1 rounded-full bg-blue-50 text-blue-700 text-sm font-medium"
-                  >
-                    {member}
+              <div className="flex-1 pt-2">
+                <div className="flex items-center gap-3 mb-1">
+                  <h1 className="text-3xl font-bold text-gray-900">{club.name}</h1>
+                  <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider ${club.color || 'bg-blue-100 text-blue-800'}`}>
+                    {club.tag}
                   </span>
-                ))}
+                </div>
+                <div className="flex items-center text-gray-500 text-sm">
+                  <Users className="w-4 h-4 mr-1" />
+                  {club.memberCount || '0'} Members
+                </div>
               </div>
-            ) : (
-              <p className="text-gray-600 italic">
-                Member details will be updated soon.
-              </p>
-            )}
-          </section>
 
-          {/* Description */}
-          <section className="mb-6">
-            <h2 className="text-xl font-semibold text-gray-900 mb-3 flex items-center">
-              <Star className="w-5 h-5 mr-2 text-yellow-400" />
-              About the Club
-            </h2>
-            <p className="text-gray-700 leading-relaxed whitespace-pre-line">
-              {club.longDescription || club.description}
-            </p>
-          </section>
+              {/* Edit Button for Admins */}
+              {authUser?.role === 'admin' && (
+                <button
+                  onClick={() => setIsEditModalOpen(true)}
+                  className="flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors font-medium mt-4 md:mt-0"
+                  title="Edit Club"
+                >
+                  <Edit className="w-4 h-4" />
+                  Edit Details
+                </button>
+              )}
+            </div>
 
-          {/* Achievements */}
-          <section className="mb-6">
-            <h2 className="text-xl font-semibold text-gray-900 mb-3 flex items-center">
-              <Award className="w-5 h-5 mr-2 text-green-600" />
-              Club Achievements
-            </h2>
-            {club.achievements && club.achievements.length > 0 ? (
-              <ul className="list-disc list-inside text-gray-700 space-y-1">
-                {club.achievements.map((ach, index) => (
-                  <li key={index}>{ach}</li>
-                ))}
-              </ul>
-            ) : (
-              <p className="text-gray-600 italic">
-                Achievements will be updated soon.
-              </p>
-            )}
-          </section>
+            <div className="grid lg:grid-cols-3 gap-8">
+              {/* Main Info */}
+              <div className="lg:col-span-2 space-y-8">
+                {/* Description */}
+                <section>
+                  <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center">
+                    <Star className="w-5 h-5 mr-2 text-yellow-500 fill-yellow-500" />
+                    About Us
+                  </h2>
+                  <div className="prose prose-blue max-w-none text-gray-600 leading-relaxed whitespace-pre-line bg-gray-50 p-6 rounded-2xl border border-gray-100">
+                    {club.longDescription || club.description}
+                  </div>
+                </section>
 
-          {/* CTA */}
-          <div className="mt-8 flex flex-col md:flex-row md:items-center md:justify-between gap-4 border-t pt-6">
-            <p className="text-gray-700 text-sm">
-              Interested in joining <span className="font-semibold">{club.name}</span>?
-              Reach out to the president or faculty coordinator on campus.
-            </p>
-            <button className="bg-blue-600 text-white px-6 py-2 rounded-lg font-semibold hover:bg-blue-700 transition-colors shadow-sm">
-              I&apos;m Interested
-            </button>
+                {/* Achievements */}
+                <section>
+                  <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center">
+                    <Award className="w-5 h-5 mr-2 text-orange-500" />
+                    Achievements
+                  </h2>
+                  {club.achievements && club.achievements.length > 0 ? (
+                    <div className="grid gap-3">
+                      {club.achievements.map((ach, index) => (
+                        <div key={index} className="flex items-start bg-white border border-gray-100 p-4 rounded-xl shadow-sm">
+                          <Trophy className="w-5 h-5 mr-3 text-yellow-500 flex-shrink-0 mt-0.5" />
+                          <span className="text-gray-700">{ach}</span>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-gray-500 italic bg-gray-50 p-4 rounded-xl text-center">
+                      No achievements listed yet.
+                    </div>
+                  )}
+                </section>
+              </div>
+
+              {/* Sidebar Info */}
+              <div className="space-y-6">
+                {/* Leadership Card */}
+                <div className="bg-white border boundary-gray-100 rounded-2xl shadow-sm p-6">
+                  <h3 className="font-bold text-gray-900 mb-4 flex items-center text-lg">
+                    <Crown className="w-5 h-5 mr-2 text-yellow-500" />
+                    Leadership
+                  </h3>
+                  <div className="space-y-4">
+                    <div>
+                      <p className="text-xs text-gray-400 uppercase tracking-widest font-bold mb-1">President</p>
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold text-xs">
+                          {club.president ? club.president.charAt(0) : '?'}
+                        </div>
+                        <p className="font-medium text-gray-900">{club.president || 'TBD'}</p>
+                      </div>
+                    </div>
+                    <div className="pt-4 border-t border-gray-50">
+                      <p className="text-xs text-gray-400 uppercase tracking-widest font-bold mb-1">Vice President</p>
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-full bg-purple-100 flex items-center justify-center text-purple-600 font-bold text-xs">
+                          {club.vicePresident ? club.vicePresident.charAt(0) : '?'}
+                        </div>
+                        <p className="font-medium text-gray-900">{club.vicePresident || 'TBD'}</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Core Members Card */}
+                <div className="bg-white border boundary-gray-100 rounded-2xl shadow-sm p-6">
+                  <h3 className="font-bold text-gray-900 mb-4 flex items-center text-lg">
+                    <Users className="w-5 h-5 mr-2 text-blue-500" />
+                    Core Team
+                  </h3>
+                  {club.members && club.members.length > 0 ? (
+                    <div className="flex flex-wrap gap-2">
+                      {club.members.map((member, index) => (
+                        <span
+                          key={index}
+                          className="px-3 py-1.5 rounded-lg bg-gray-50 text-gray-700 text-sm font-medium border border-gray-100"
+                        >
+                          {member}
+                        </span>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-gray-500 text-sm italic">
+                      Team details coming soon.
+                    </p>
+                  )}
+                </div>
+
+                {/* Join CTA */}
+                <div className="bg-gradient-to-br from-blue-600 to-indigo-700 rounded-2xl p-6 text-white text-center shadow-lg">
+                  <h3 className="font-bold text-lg mb-2">Want to join?</h3>
+                  <p className="text-blue-100 text-sm mb-4">
+                    Be a part of {club.name} and explore your passion!
+                  </p>
+                  <button className="w-full bg-white text-blue-600 py-2.5 rounded-xl font-bold hover:bg-blue-50 transition-colors shadow-sm">
+                    Contact Us
+                  </button>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>

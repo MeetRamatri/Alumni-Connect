@@ -119,15 +119,15 @@ export default function ClubsCulture() {
         {/* CLUBS GRID */}
         <div className="mb-16">
           <div className="flex justify-between items-center mb-8">
-            <h2 className="text-3xl font-bold text-gray-900 text-center w-full relative">
+            <h2 className="text-3xl font-bold text-gray-900 w-full relative">
               Our Clubs
               {authUser?.role === 'admin' && (
                 <button
                   onClick={() => setIsModalOpen(true)}
-                  className="absolute right-0 top-1/2 transform -translate-y-1/2 bg-blue-600 text-white p-2 rounded-full hover:bg-blue-700 transition-colors shadow-lg"
+                  className="absolute right-0 top-1/2 transform -translate-y-1/2 bg-blue-600 text-white p-3 rounded-full hover:bg-blue-700 transition-all shadow-lg hover:shadow-blue-500/30 hover:scale-105 active:scale-95"
                   title="Add New Club"
                 >
-                  <Plus className="w-6 h-6" />
+                  <Plus className="w-5 h-5" />
                 </button>
               )}
             </h2>
@@ -135,46 +135,62 @@ export default function ClubsCulture() {
 
           {loading ? (
             <div className="flex justify-center py-12">
-              <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+              <div className="animate-spin rounded-full h-12 w-12 border-4 border-blue-500 border-t-transparent"></div>
             </div>
           ) : clubs.length === 0 ? (
-            <div className="text-center py-12 text-gray-500">
-              No clubs found.
+            <div className="text-center py-12 bg-white rounded-2xl shadow-sm border border-gray-100">
+              <p className="text-gray-500 text-lg">No clubs found.</p>
             </div>
           ) : (
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
               {clubs.map((club) => {
                 const IconComponent = iconMap[club.icon] || Users;
+                // Parse color string to get background and text/border colors
+                const colorClass = club.color || 'bg-blue-100 text-blue-800';
+                // This is a naive parsing, relying on the format "bg-X-100 text-X-800"
+                const bgClass = colorClass.split(' ')[0];
+                const textClass = colorClass.split(' ')[1];
+
                 return (
                   <div
                     key={club._id}
-                    className="bg-white rounded-xl shadow-md hover:shadow-xl transition-all p-6 border border-gray-200 hover:border-blue-300"
+                    className="group bg-white rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 p-6 border border-gray-100 hover:border-blue-200 flex flex-col h-full relative overflow-hidden"
                   >
+                    {/* Decorative Top Line */}
+                    <div className={`absolute top-0 left-0 w-full h-1 ${bgClass.replace('100', '500')}`} />
+
                     <div className="flex items-start justify-between mb-4">
-                      <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-                        <IconComponent className="w-6 h-6 text-blue-600" />
+                      <div className={`w-14 h-14 ${bgClass} rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300`}>
+                        <IconComponent className={`w-7 h-7 ${textClass}`} />
                       </div>
                       <span
-                        className={`px-3 py-1 rounded-full text-xs font-semibold ${club.color || 'bg-gray-100 text-gray-800'}`}
+                        className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider ${colorClass}`}
                       >
                         {club.tag}
                       </span>
                     </div>
-                    <h3 className="text-xl font-bold text-gray-900 mb-1">
+
+                    <h3 className="text-2xl font-bold text-gray-900 mb-2 group-hover:text-blue-600 transition-colors">
                       {club.name}
                     </h3>
-                    <p className="text-xs text-gray-500 mb-2 flex items-center">
-                      <Crown className="w-3 h-3 mr-1 text-yellow-500" />
-                      Current President: {club.president || 'TBD'}
-                    </p>
-                    <p className="text-gray-600 mb-4 leading-relaxed line-clamp-3">
+
+                    {club.president && (
+                      <div className="flex items-center text-sm text-gray-500 mb-3 bg-gray-50 px-3 py-1.5 rounded-lg w-fit">
+                        <Crown className="w-4 h-4 mr-2 text-yellow-500 fill-yellow-500" />
+                        <span className="font-medium">lead: {club.president}</span>
+                      </div>
+                    )}
+
+                    <p className="text-gray-600 mb-6 leading-relaxed line-clamp-3 text-sm flex-grow">
                       {club.description}
                     </p>
+
                     <button
                       onClick={() => navigate(`/clubs-culture/${club._id}`)}
-                      className="w-full bg-blue-600 text-white py-2 rounded-lg font-semibold hover:bg-blue-700 transition-colors"
+                      className={`w-full py-3 rounded-xl font-bold transition-all ${'bg-gray-50 text-gray-700 hover:bg-gray-100 group-hover:bg-blue-600 group-hover:text-white'
+                        }`}
                     >
-                      Know More
+                      View Details
                     </button>
                   </div>
                 );

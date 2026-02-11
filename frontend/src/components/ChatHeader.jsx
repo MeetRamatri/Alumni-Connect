@@ -66,7 +66,7 @@
 //         <>
 //             {/* TOP HEADER */}
 //             <div className='flex justify-between items-center bg-slate-800/50 border-b border-slate-700/50 max-h-[84px] px-6 flex-1'>
-                
+
 //                 {/* Left User Info */}
 //                 <div className='flex items-center space-x-3'>
 //                     <div className={`avatar ${isOnline ? "online" : "offline"}`}>
@@ -152,30 +152,20 @@
 // export default ChatHeader
 import React, { useState } from 'react'
 import { useChatStore } from '../store/useChatStore'
-import { XIcon, Calendar } from 'lucide-react'
+import { XIcon } from 'lucide-react'
 import { useAuthStore } from '../store/useAuthStore'
-import { useMeetingStore } from '../store/useMeetingStore'
 
 function ChatHeader() {
     const { selectedUser, setSelectedUser } = useChatStore()
-    const { onlineUsers, user } = useAuthStore()
-    const { createInstantMeeting, loading } = useMeetingStore()
+    const { onlineUsers } = useAuthStore()
 
     const isOnline = onlineUsers.includes(String(selectedUser._id))
-    const isAlumni = user?.role === "ALUMNI"   // BLOCK alumni
-
-    const handleInstantMeeting = async () => {
-        const meeting = await createInstantMeeting(selectedUser._id || selectedUser._id)
-        if (meeting) {
-            window.open(meeting.jitsiUrl, "_blank")
-        }
-    }
 
     return (
         <>
             {/* TOP HEADER */}
             <div className='flex justify-between items-center bg-white border-b border-slate-700/50 max-h-[84px] px-6 flex-1'>
-                
+
                 {/* Left User Info */}
                 <div className='flex items-center space-x-3'>
                     <div className={`avatar ${isOnline ? "online" : "offline"}`}>
@@ -200,21 +190,6 @@ function ChatHeader() {
 
                 {/* Right Buttons */}
                 <div className="flex items-center gap-4">
-
-                    {/* INSTANT MEETING BUTTON (ONLY STUDENTS) */}
-                    {!isAlumni && (
-                        <button
-                            onClick={handleInstantMeeting}
-                            disabled={loading}
-                            className='flex items-center gap-2 bg-blue-500 hover:bg-blue-400 text-white px-3 py-1.5 rounded-md transition'
-                        >
-                            <Calendar size={18} />
-                            <span className="hidden md:block text-sm">
-                                {loading ? "Creating..." : "Meeting"}
-                            </span>
-                        </button>
-                    )}
-
                     {/* CLOSE CHAT BUTTON */}
                     <button onClick={() => setSelectedUser(null)}>
                         <XIcon className='w-5 h-5 text-slate-400 hover:text-slate-200 transition-colors cursor-pointer' />

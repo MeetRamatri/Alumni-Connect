@@ -23,6 +23,8 @@ dotenv.config();
 // Connect to database
 connectDB();
 
+app.set("trust proxy", 1);
+
 // Middleware
 app.use(express.json());
 app.use((req, res, next) => {

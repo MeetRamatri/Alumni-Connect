@@ -7,10 +7,7 @@ import { socketAuthMiddleware } from '../middleware/socket.auth.middleware.js'
 const app=express()
 const server=http.createServer(app)
 const io=new Server(server,{
-    cors:{
-        origin:[ENV.CLIENT_URL],
-        credentials:true,
-    }
+    cors:{origin:["http://localhost:5173","http://localhost:5174","https://alumni-connect-1-kprb.onrender.com"]},
 })
 io.use(socketAuthMiddleware)
 export function getRecieverSocketId(userId){

@@ -1,6 +1,6 @@
 import cloudinary from "../lib/cloudinary.js";
 import { getRecieverSocketId, io } from "../lib/socket.js";
-import User from "../models/User.model.js";
+import User from "../models/user.model.js";
 import Message from "../models/Message.model.js";
 export const getAllContacts = async (req, res) => {
   try {

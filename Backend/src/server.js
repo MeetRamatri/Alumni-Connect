@@ -31,7 +31,7 @@ app.use((req, res, next) => {
 });
 app.use(cookieParser());
 app.use(cors({
-  origin: ["http://localhost:5173", "http://localhost:5174"],
+  origin: ["http://localhost:5173", "http://localhost:5174", "https://alumni-connect-1-kprb.onrender.com"],
   credentials: true
 }))
 

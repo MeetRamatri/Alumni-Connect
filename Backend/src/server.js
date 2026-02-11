@@ -9,12 +9,12 @@ import connectDB from "./config/db.js";
 // Import routes
 import authRoute from "./routes/auth.route.js";
 import eventRoute from "./routes/event.route.js";
-import testRoute from "./routes/testRoute.js";
+
 import clubsRoute from "./routes/clubs.js";
 import userRoute from "./routes/user.js";
 import opportunityRoute from "./routes/opportunity.js";
 import messageRoutes from "./routes/message.route.js";
-import meetingRoutes from "./routes/meeting.route.js";
+// import meetingRoutes from "./routes/meeting.route.js";
 import { app, server } from "./lib/socket.js";
 
 // Configure environment variables
@@ -36,14 +36,14 @@ app.use(cors({
 }))
 
 // Routes
-app.use("/", testRoute);
+
 app.use("/api/auth", authRoute);
 app.use("/api/events", eventRoute);
 app.use("/api/clubs", clubsRoute);
 app.use("/api/users", userRoute);
 app.use("/api/opportunities", opportunityRoute);
 app.use('/api/messages', messageRoutes);
-app.use("/api/meeting", meetingRoutes);
+// app.use("/api/meeting", meetingRoutes);
 
 // Start server
 const port = process.env.PORT || 3000;

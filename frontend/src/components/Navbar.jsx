@@ -113,7 +113,7 @@ export default function Navbar() {
                 to="/login"
                 className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-6 py-2 rounded-full font-medium shadow-md hover:shadow-lg hover:shadow-blue-500/30 transition-all duration-300 transform hover:-translate-y-0.5"
               >
-                Alumni Connect
+                Login / Sign Up
               </Link>
             )}
           </div>
